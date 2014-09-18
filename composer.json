@@ -1,0 +1,15 @@
+{
+    "name": "lamudi/csv_uploader_example",
+    "require": {
+        "zendframework/zendframework1": "1.12.8"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "4.2.*"
+    },
+    "authors": [
+        {
+            "name": "karlos.presumido",
+            "email": "karlos.presumido@lamudi.com"
+        }
+    ]
+}
