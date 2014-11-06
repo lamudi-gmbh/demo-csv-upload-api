@@ -8,7 +8,7 @@ Setup
 
 - Download import templates from BOB for your country and use them for your files as base
   - You can use several attributesets in one run (file convention like importtemplate_land__20141105165221_694858.csv for land)
-- There is 2 folders in data/csv/, one for new products (create) and other one for existing products (update).
+- There are 2 folders in data/csv/, one for new products (create) and other one for existing products (update).
   - To update products, put importtempate files there 
   - To create new products, put importtemplate files there
 - Change the constant BOB_URL in IndexController, depending your current setup.
