@@ -1,6 +1,7 @@
 {
     "name": "lamudi/csv_uploader_example",
     "require": {
+        "php": ">=5.4",
         "zendframework/zendframework1": "1.12.8"
     },
     "require-dev": {
