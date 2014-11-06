@@ -12,7 +12,7 @@ Setup
   - To update products, put importtempate files there 
   - To create new products, put importtemplate files there
 - Change the constant BOB_URL in IndexController, depending your current setup.
-- Start the local PHP Webserver with "bash start_webserver.sh"
+- Start the local PHP Webserver with "php -S localhost:8000"
 
 Run
 -
