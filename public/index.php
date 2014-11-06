@@ -15,19 +15,6 @@ set_include_path(implode(PATH_SEPARATOR, array(
             get_include_path(),
         )));
 
-// Including Rocket libraries
-set_include_path(implode(PATH_SEPARATOR, array(
-            realpath(APPLICATION_PATH . '/../../vendor'),
-            get_include_path(),
-        )));
-
-// Including modules libraries
-set_include_path(implode(PATH_SEPARATOR, array(
-            realpath(APPLICATION_PATH . '/../../bob/application/vendor/modules'),
-            get_include_path(),
-        )));
-
-
 /** Zend_Application */
 require_once 'Zend/Application.php';
 
@@ -37,6 +24,5 @@ $application = new Zend_Application(
     APPLICATION_PATH . '/configs/application.ini'
 );
 
-require_once(APPLICATION_PATH . '/../../bob/application/local/init_autoloader_bob_local.php');
 $application->bootstrap()
             ->run();
