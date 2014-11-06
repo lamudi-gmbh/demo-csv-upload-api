@@ -11,7 +11,7 @@ Setup
 - There are 2 folders in data/csv/, one for new products (create) and other one for existing products (update).
   - To update products, put importtempate files there 
   - To create new products, put importtemplate files there
-- Change the constant BOB_URL in IndexController, depending your current setup.
+- Change the variable "bob.url" in "application/configs/application.ini", depending your current setup.
 - Start the local PHP Webserver with "php -S localhost:8000"
 
 Run

@@ -7,15 +7,22 @@ set_time_limit(600);
  */
 class IndexController extends Zend_Controller_Action
 {
-    /**
-     * constant for url
-     */
-    const BOB_URL = 'http://intres.bob/import/csv/';
 
     /**
      * constant for line ending (PHP_EOL will not work)
      */
     const EOL = '<br/>';
+
+    protected $bobUrl;
+
+    public function __construct(
+        Zend_Controller_Request_Abstract $request,
+        Zend_Controller_Response_Abstract $response, array $invokeArgs = array()
+    ) {
+        $config = $invokeArgs['bootstrap']->getApplication()->getOption('bob');
+        $this->bobUrl = $config['url'];
+        parent::__construct($request, $response, $invokeArgs);
+    }
 
     /**
      * index action
@@ -56,7 +63,7 @@ class IndexController extends Zend_Controller_Action
     {
         $httpClient = new Zend_Http_Client;
         $httpClient->setConfig(array('timeout' => '600'));
-        return new Zend_XmlRpc_Client(static::BOB_URL, $httpClient);
+        return new Zend_XmlRpc_Client($this->bobUrl, $httpClient);
     }
 
     /**
