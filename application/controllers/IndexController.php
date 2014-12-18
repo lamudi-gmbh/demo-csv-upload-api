@@ -14,6 +14,8 @@ class IndexController extends Zend_Controller_Action
     const EOL = '<br/>';
 
     protected $bobUrl;
+    protected $bobUser;
+    protected $bobPassword;
 
     public function __construct(
         Zend_Controller_Request_Abstract $request,
@@ -21,6 +23,8 @@ class IndexController extends Zend_Controller_Action
     ) {
         $config = $invokeArgs['bootstrap']->getApplication()->getOption('bob');
         $this->bobUrl = $config['url'];
+        $this->bobUser = $config['user'];
+        $this->bobPassword = $config['password'];
         parent::__construct($request, $response, $invokeArgs);
     }
 
@@ -63,6 +67,7 @@ class IndexController extends Zend_Controller_Action
     {
         $httpClient = new Zend_Http_Client;
         $httpClient->setConfig(array('timeout' => '600'));
+        $httpClient->setAuth($this->bobUser, $this->bobPassword);
         return new Zend_XmlRpc_Client($this->bobUrl, $httpClient);
     }
 
