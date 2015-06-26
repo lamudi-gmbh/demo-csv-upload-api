@@ -44,7 +44,7 @@ class IndexController extends Zend_Controller_Action
         $result = $this->_uploadFilesFromDir(
             APPLICATION_PATH . '/../data/csv/update/*.csv', 'update'
         );
-        $this->_processResult($result);
+        $this->_processResult($result, 'update');
     }
 
     /**
@@ -55,7 +55,7 @@ class IndexController extends Zend_Controller_Action
         $result = $this->_uploadFilesFromDir(
             APPLICATION_PATH . '/../data/csv/create/*.csv', 'create'
         );
-        $this->_processResult($result);
+        $this->_processResult($result, 'create');
     }
 
     /**
@@ -103,29 +103,44 @@ class IndexController extends Zend_Controller_Action
             try {
                 // read data from file and try to upload
                 $data = file_get_contents($file);
-
+                $lines = count(file($file)) - 1;
                 if (empty($data)) {
                     // if file is empty, jump over this file
-                    $return[] = array('success' => false,
-                                      'details' => $fileBasename . ' is empty.',
-                                      'file'    => $fileBasename);
+                    $return[] = array(
+                        'success'   => false,
+                        'details'   => $fileBasename . ' is empty.',
+                        'file'      => $fileBasename);
                     continue;
                 }
+                // log time
+                $timeStart = microtime(true);
+
                 // call csv api
                 $response = $client->call(
                     'csv.upload', array($attrSet, $mode, $data)
                 );
+
+                // calculate elapsed time
+                $timeEnd = microtime(true);
+                $time = number_format($timeEnd - $timeStart, 2) . 's';
                 // add filename to response
+                $response['time'] = $time;
                 $response['file'] = $fileBasename;
+                $response['lines'] = $lines;
                 // add response to return array
                 $return[] = $response;
 
             } catch (Zend_XmlRpc_Client_FaultException $e) {
+                $timeEnd = microtime(true);
+                $time = number_format($timeEnd - $timeStart, 2) . 's';
                 // if exception, set error message
-                $return[] = array('success' => false,
-                                  'details' => $e->getCode() . ' - '
-                                      . $e->getMessage(),
-                                  'file'    => $fileBasename);
+                $return[] = array(
+                    'success'   => false,
+                    'details'   => $e->getCode() . ' - ' . $e->getMessage(),
+                    'file'      => $fileBasename,
+                    'time'      => $time,
+                    'lines'     => $lines
+                );
             }
         }
 
@@ -141,30 +156,18 @@ class IndexController extends Zend_Controller_Action
     /**
      * process the result
      *
-     * @param $result
+     * @param array $result
+     * @param string $type
      */
-    protected function _processResult(array $resultArray)
+    protected function _processResult(array $resultArray, $type = '')
     {
-        //loop over result array
-        foreach ($resultArray as $result) {
-
-            if ($result['success']) {
-                if (isset($result['details'])) {
-                    $details = $result['details'];
-                } else {
-                    $details = '';
-                }
-                // create view message
-                $this->view->message
-                    .= "Import done for file " . $result['file'] . $details;
-            } else {
-                $error
-                    = "Import Error for file " . $result['file'] . static::EOL
-                    . $result['error'] . ' - ' . $result['details'];
-                // create view message
-                $this->view->message .= $error;
-            }
-        }
+        $this->getResponse()
+            ->setHeader('Content-Type', 'application/json');
+        $json = json_encode($resultArray);
+        $this->view->json = $json;
+        $logFileName = $type . '_' . time() . '.log';
+        //log to file
+        file_put_contents(APPLICATION_PATH . '/../logs/' . $logFileName, $json);
     }
 
     /**
@@ -177,7 +180,7 @@ class IndexController extends Zend_Controller_Action
         //importtemplate_land__20140917092219_877300.csv
         /** @var array $explode */
         $explode = explode('_', basename($file));
-        if (count($explode) == 5) {
+        if (count($explode) >= 3) {
             return $explode[1]; //land or any other attrtype
         }
         return array('success' => false,
