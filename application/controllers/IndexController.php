@@ -124,9 +124,10 @@ class IndexController extends Zend_Controller_Action
                 $timeEnd = microtime(true);
                 $time = number_format($timeEnd - $timeStart, 2) . 's';
                 // add filename to response
-                $response['time'] = $time;
                 $response['file'] = $fileBasename;
-                $response['lines'] = $lines;
+                $response['attribute_set'] = $attrSet;
+                $response['time'] = $time;
+                $response['lines_send'] = $lines;
                 // add response to return array
                 $return[] = $response;
 
@@ -138,8 +139,9 @@ class IndexController extends Zend_Controller_Action
                     'success'   => false,
                     'details'   => $e->getCode() . ' - ' . $e->getMessage(),
                     'file'      => $fileBasename,
+                    'attribute_set' => $attrSet,
                     'time'      => $time,
-                    'lines'     => $lines
+                    'lines_send'     => $lines
                 );
             }
         }
