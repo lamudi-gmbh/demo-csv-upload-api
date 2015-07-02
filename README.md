@@ -20,3 +20,18 @@ Setup
 Run
 -
 - Just go to http://localhost:8000/index/upload or http://localhost:8000/index/create to upload the .csv files located in the data folder.
+
+If you want to integrate the CSV API into your own code, use following structure (its basically one http form upload with authentication)
+
+
+    curl -u USERNAME:PASSWORD --form file1=@PATH_TO_CSV "http://URL/import/csv/?attribute_set=ATTRIBUTESET&mode=update|create"
+
+e.g.
+
+    curl -u john:doe --form file1=@products_apartment_20150701173133_028233.csv "http://bob.shop/import/csv/?attribute_set=apartment&mode=update"
+
+OR
+
+    curl -u john:doe --form file1=@products_apartment_20150701173133_028233.csv "http://bob.shop/import/csv/?attribute_set=apartment&mode=create"
+    
+    

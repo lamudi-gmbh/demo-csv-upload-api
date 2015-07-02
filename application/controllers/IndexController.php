@@ -1,5 +1,6 @@
 <?php
-ini_set('max_execution_time', 20*60);
+define('MAX_EXECUTION_TIME', 1200);
+ini_set('max_execution_time', MAX_EXECUTION_TIME);
 
 /**
  * Class IndexController
@@ -61,14 +62,14 @@ class IndexController extends Zend_Controller_Action
     /**
      * $httpClient is needed to pass parameters to XmlRpc client
      *
-     * @return Zend_XmlRpc_Client
+     * @return Zend_Http_Client
      */
     protected function _getClient()
     {
         $httpClient = new Zend_Http_Client;
-        $httpClient->setConfig(array('timeout' => '600'));
+        $httpClient->setConfig(array('timeout' => 30));
         $httpClient->setAuth($this->bobUser, $this->bobPassword);
-        return new Zend_XmlRpc_Client($this->bobUrl, $httpClient);
+        return $httpClient;
     }
 
     /**
@@ -84,9 +85,10 @@ class IndexController extends Zend_Controller_Action
         $client = $this->_getClient();
         $files = glob($dir);
         $i = 0;
-        $return = array();
+        $returnList = array();
 
         foreach ($files as $file) {
+            $return = array();
             $i++;
             $file = realpath($file);
             $fileBasename = basename($file);
@@ -101,8 +103,10 @@ class IndexController extends Zend_Controller_Action
             }
 
             try {
+
                 // read data from file and try to upload
                 $data = file_get_contents($file);
+
                 $lines = count(file($file)) - 1;
                 if (empty($data)) {
                     // if file is empty, jump over this file
@@ -114,29 +118,39 @@ class IndexController extends Zend_Controller_Action
                 }
                 // log time
                 $timeStart = microtime(true);
+                // add file to POST payload
+                $client->setFileUpload($file, 'csv');
+
+                $url = $this->bobUrl . '?attribute_set=' . $attrSet . '&mode=' . $mode;
+                // build uri with mode and attribute_set
+                $client->setUri($url);
 
                 // call csv api
-                $response = $client->call(
-                    'csv.upload', array($attrSet, $mode, $data)
-                );
-
+                /**
+                 * @var Zend_Http_Response
+                 */
+                $responseObject = $client->request('POST');
                 // calculate elapsed time
                 $timeEnd = microtime(true);
                 $time = number_format($timeEnd - $timeStart, 2) . 's';
-                // add filename to response
-                $response['file'] = $fileBasename;
-                $response['attribute_set'] = $attrSet;
-                $response['time'] = $time;
-                $response['lines_send'] = $lines;
+                $response = array(
+                    'request_url' => $url,
+                    'payload' => json_decode($responseObject->getBody()),
+                    'file' => $fileBasename,
+                    'attribute_set' => $attrSet,
+                    'time' => $time,
+                    'lines_send' => $lines
+                );
                 // add response to return array
                 $return[] = $response;
 
-            } catch (Zend_XmlRpc_Client_FaultException $e) {
+            } catch (Exception $e) {
                 $timeEnd = microtime(true);
                 $time = number_format($timeEnd - $timeStart, 2) . 's';
                 // if exception, set error message
                 $return[] = array(
                     'success'   => false,
+                    'request_url' => $url,
                     'details'   => $e->getCode() . ' - ' . $e->getMessage(),
                     'file'      => $fileBasename,
                     'attribute_set' => $attrSet,
@@ -144,6 +158,7 @@ class IndexController extends Zend_Controller_Action
                     'lines_send'     => $lines
                 );
             }
+            $returnList[$fileBasename] = $return;
         }
 
         //check that we have processed some files
@@ -152,7 +167,7 @@ class IndexController extends Zend_Controller_Action
                          'details' => 'No files in the provided directory');
         }
         // return the array with the process details
-        return $return;
+        return $returnList;
     }
 
     /**
